@@ -5,7 +5,7 @@
 let tokenIdGlobal = null;
 let usuarioAutorizado = false;
 
-const API_URL = 'https://newspapers-offshore-ryan-restrictions.trycloudflare.com/api/verificar';
+const API_URL = 'https://gig-outdoor-statutes-glow.trycloudflare.com/api/verificar';
 const CLIENT_ID = '1071055000182-hm20f433jmgqvce1luen9lksi99kcv99.apps.googleusercontent.com';
 
 // Inicializa o SDK do Google Identity Services
