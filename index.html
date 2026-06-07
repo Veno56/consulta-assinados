@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta - Abaixo Assinado (Nome, Curso/Setor, RG, RA)</title>
+    <style>
+        body { font-family: Arial; margin: 40px; max-width: 800px; }
+        input, button { padding: 10px; font-size: 16px; }
+        button { margin-left: 10px; cursor: pointer; }
+        #resultado { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .sim { background-color: #c8e6c9; color: #256029; }
+        .nao { background-color: #ffcdd2; color: #b71c1c; }
+        .lista { margin-top: 10px; max-height: 400px; overflow-y: auto; border-top: 1px solid #ccc; padding-top: 10px; }
+        .lista ul { margin: 0; padding-left: 20px; }
+        .lista li { margin: 8px 0; }
+        .dica { font-size: 14px; color: #555; margin-top: 5px; }
+        .loading { color: #1976d2; }
+        .item-resultado { margin-bottom: 5px; }
+        .curso-setor { color: #2c3e50; font-style: italic; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <h2>Verificar assinatura</h2>
+    <p>Digite o <strong>primeiro nome, RG (apenas números) ou RA</strong>.</p>
+    <input type="text" id="campoBusca" placeholder="Ex: Mare, 123456789 ou 2024001" size="40">
+    <button onclick="verificar()">Consultar</button>
+    <div id="resultado"></div>
+    <div class="dica">
+        ✔️ <strong>Busca por nome:</strong> lista TODOS os nomes completos cujo primeiro nome <strong>começa com</strong> o termo digitado.<br>
+        ✔️ <strong>RG ou RA:</strong> retorna a pessoa correspondente.<br>
+        ✔️ Ao lado de cada nome será exibido o <strong>Curso / Setor / Vínculo</strong> (se existir na planilha).<br>
+        🔍 Os dados são atualizados a cada consulta.
+    </div>
+        <script src="verificarAssinatura.js"></script>
+</body>
+</html>
