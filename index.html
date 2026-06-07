@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta - Abaixo Assinado (Nome, Curso/Setor, RG, RA)</title>
+    <title>Consulta - Abaixo Assinado (Seguro)</title>
     <style>
         body { font-family: Arial; margin: 40px; max-width: 800px; }
         input, button { padding: 10px; font-size: 16px; }
@@ -15,22 +15,32 @@
         .lista li { margin: 8px 0; }
         .dica { font-size: 14px; color: #555; margin-top: 5px; }
         .loading { color: #1976d2; }
-        .item-resultado { margin-bottom: 5px; }
         .curso-setor { color: #2c3e50; font-style: italic; margin-left: 8px; }
+        .logout-btn { background-color: #f44336; color: white; border: none; cursor: pointer; margin-left: 10px; }
+        .logout-btn:hover { background-color: #d32f2f; }
     </style>
 </head>
 <body>
-    <h2>Verificar assinatura</h2>
-    <p>Digite o <strong>primeiro nome, RG (apenas números) ou RA</strong>.</p>
-    <input type="text" id="campoBusca" placeholder="Ex: Mare, 123456789 ou 2024001" size="40">
-    <button onclick="verificar()">Consultar</button>
-    <div id="resultado"></div>
-    <div class="dica">
-        ✔️ <strong>Busca por nome:</strong> lista TODOS os nomes completos cujo primeiro nome <strong>começa com</strong> o termo digitado.<br>
-        ✔️ <strong>RG ou RA:</strong> retorna a pessoa correspondente.<br>
-        ✔️ Ao lado de cada nome será exibido o <strong>Curso / Setor / Vínculo</strong> (se existir na planilha).<br>
-        🔍 Os dados são atualizados a cada consulta.
+    <div id="login-container">
+        <h2>Acesso Restrito</h2>
+        <p>Faça login com sua conta Google (membro do grupo autorizado).</p>
+        <div id="google-login-btn"></div>
     </div>
-        <script src="verificarAssinatura.js"></script>
+
+    <div id="consulta-container" style="display:none;">
+        <h2>Verificar assinatura</h2>
+        <p>Digite o <strong>primeiro nome, RG (apenas números) ou RA</strong>.</p>
+        <input type="text" id="campoBusca" placeholder="Ex: João, 123456789 ou 2024001" size="40">
+        <button onclick="verificar()">Consultar</button>
+        <button onclick="logout()" class="logout-btn">Sair</button>
+        <div id="resultado"></div>
+        <div class="dica">
+            ✔️ Busca por primeiro nome (ex: "João" encontra "João Silva", "João Paulo")<br>
+            ✔️ RG ou RA retornam a pessoa correspondente.<br>
+            ✔️ Acesso restrito ao grupo autorizado.
+        </div>
+    </div>
+
+    <script src="verificarAssinatura.js"></script>
 </body>
 </html>
