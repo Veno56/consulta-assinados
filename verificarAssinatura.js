@@ -1,5 +1,5 @@
 // verificarAssinatura.js
-let tokenJWT = null;
+let tokenJWT = S)qFQF"9x<wo~e@A4C_%V[D}}F{A:>VA%/}SN?_`"^{]>%TWJh;
 
 // ⚠️ ATENÇÃO: substitua esta URL pela URL pública gerada pelo ngrok
 // Exemplo: https://abc123.ngrok.io
