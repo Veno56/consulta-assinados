@@ -2,11 +2,11 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta - Abaixo Assinado (Seguro)</title>
+    <title>Consulta de Assinaturas</title>
     <style>
         body { font-family: Arial; margin: 40px; max-width: 800px; }
-        input, button { padding: 10px; font-size: 16px; }
-        button { margin-left: 10px; cursor: pointer; }
+        input, button { padding: 10px; font-size: 16px; margin: 5px; }
+        button { cursor: pointer; }
         #resultado { margin-top: 20px; padding: 10px; border-radius: 5px; }
         .sim { background-color: #c8e6c9; color: #256029; }
         .nao { background-color: #ffcdd2; color: #b71c1c; }
@@ -15,10 +15,8 @@
         .lista li { margin: 8px 0; }
         .dica { font-size: 14px; color: #555; margin-top: 5px; }
         .loading { color: #1976d2; }
-        .logout-btn { background-color: #f44336; color: white; border: none; cursor: pointer; margin-left: 10px; }
+        .logout-btn { background-color: #f44336; color: white; border: none; margin-left: 10px; }
         .logout-btn:hover { background-color: #d32f2f; }
-
-        /* Botão de correção */
         .btn-correcao {
             background: none;
             border: none;
@@ -28,11 +26,7 @@
             color: #d32f2f;
             transition: transform 0.2s;
         }
-        .btn-correcao:hover {
-            transform: scale(1.15);
-        }
-
-        /* Modal */
+        .btn-correcao:hover { transform: scale(1.15); }
         .modal {
             display: none;
             position: fixed;
@@ -50,7 +44,6 @@
             border-radius: 8px;
             width: 90%;
             max-width: 450px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             position: relative;
         }
         .modal-fechar {
@@ -60,30 +53,38 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .modal-fechar:hover {
-            color: black;
+        .modal-fechar:hover { color: black; }
+        .login-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 300px;
         }
     </style>
 </head>
 <body>
     <div id="login-container">
         <h2>Acesso Restrito</h2>
-        <p>Faça login com sua conta Google (membro do grupo autorizado).</p>
-        <div id="google-login-btn"></div>
+        <div class="login-box">
+            <input type="text" id="login-nome" placeholder="Usuário" autocomplete="off"><br>
+            <input type="password" id="login-senha" placeholder="Senha"><br>
+            <button onclick="fazerLogin()">Entrar</button>
+        </div>
+        <div id="resultado"></div>
     </div>
 
     <div id="consulta-container" style="display:none;">
         <h2>Verificar assinatura</h2>
         <p>Digite o <strong>primeiro nome, RG (apenas números) ou RA</strong>.</p>
-        <input type="text" id="campoBusca" placeholder="Ex: Maré, 123456789 ou 2024001" size="40">
+        <input type="text" id="campoBusca" placeholder="Ex: João, 123456789 ou 2024001" size="40">
         <button onclick="verificar()">Consultar</button>
+        <button onclick="listarTodasCorrecoes()" style="background-color: #ff9800; color: white;">🔧 Ver todas correções pendentes</button>
         <button onclick="logout()" class="logout-btn">Sair</button>
         <div id="resultado"></div>
         <div class="dica">
-            ✔️ Busca por primeiro nome (ex: "Milton" encontra "Milton Santos", "Milton Nascimento")<br>
-            ✔️ RG ou RA retornam a pessoa correspondente.<br>
-            ✔️ Acesso restrito ao grupo autorizado.<br>
-            ✔️ Se houver um ícone 🔍, clique para ver o que precisa ser corrigido.
+            ✔️ Busca por primeiro nome, nome completo, RG ou RA (inclui partes numéricas).<br>
+            ✔️ Se houver ícone 🔍, clique para ver correções necessárias (RG, RA ou Curso).<br>
+            ✔️ Botão laranja lista todas as pessoas com pendência de correção.
         </div>
     </div>
 

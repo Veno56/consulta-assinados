@@ -1,203 +1,142 @@
-// ==========================================
-// FRONT-END SEGURO (com login Google e Curso/Setor)
-// ==========================================
+// verificarAssinatura.js
+let tokenJWT = null;
 
-let tokenIdGlobal = null;
-let usuarioAutorizado = false;
+// ⚠️ ATENÇÃO: substitua esta URL pela URL pública gerada pelo ngrok
+// Exemplo: https://abc123.ngrok.io
+const API_URL = 'https://reformer-unreal-escalate.ngrok-free.dev/api/verificar';
 
-const API_URL = 'http://localhost:3001/api/verificar';
-const CLIENT_ID = '1071055000182-hm20f433jmgqvce1luen9lksi99kcv99.apps.googleusercontent.com';
+const loginContainer = document.getElementById('login-container');
+const consultaContainer = document.getElementById('consulta-container');
+const resultadoDiv = document.getElementById('resultado');
+const campoBusca = document.getElementById('campoBusca');
 
-// Inicializa o SDK do Google Identity Services
-window.onload = function() {
-  const script = document.createElement('script');
-  script.src = 'https://accounts.google.com/gsi/client';
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-
-  script.onload = () => {
-    google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      callback: handleCredentialResponse,
-      auto_select: false,
-      cancel_on_tap_outside: true
+async function fazerLogin() {
+  const nome = document.getElementById('login-nome').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!nome || !senha) { alert('Preencha usuário e senha.'); return; }
+  resultadoDiv.innerHTML = '<span class="loading">🔄 Autenticando...</span>';
+  try {
+    const resposta = await fetch(`${API_URL.replace('/api/verificar', '')}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, senha })
     });
-    google.accounts.id.renderButton(
-      document.getElementById('google-login-btn'),
-                                    { theme: 'outline', size: 'large', text: 'login_with' }
-    );
-  };
-};
-
-function handleCredentialResponse(response) {
-  tokenIdGlobal = response.credential;
-  usuarioAutorizado = true;
-  document.getElementById('login-container').style.display = 'none';
-  document.getElementById('consulta-container').style.display = 'block';
+    const dados = await resposta.json();
+    if (dados.sucesso) {
+      tokenJWT = dados.token;
+      loginContainer.style.display = 'none';
+      consultaContainer.style.display = 'block';
+      resultadoDiv.innerHTML = '';
+    } else {
+      resultadoDiv.innerHTML = `❌ Erro: ${dados.erro}`;
+      resultadoDiv.className = 'nao';
+    }
+  } catch (err) {
+    resultadoDiv.innerHTML = `❌ Erro na conexão: ${err.message}`;
+  }
 }
 
 function logout() {
-  tokenIdGlobal = null;
-  usuarioAutorizado = false;
-  google.accounts.id.disableAutoSelect();
-  document.getElementById('login-container').style.display = 'block';
-  document.getElementById('consulta-container').style.display = 'none';
-  document.getElementById('campoBusca').value = '';
-  document.getElementById('resultado').innerHTML = '';
+  tokenJWT = null;
+  loginContainer.style.display = 'block';
+  consultaContainer.style.display = 'none';
+  campoBusca.value = '';
+  resultadoDiv.innerHTML = '';
+  document.getElementById('login-nome').value = '';
+  document.getElementById('login-senha').value = '';
 }
 
-// Funções de normalização (para manter consistência)
-function normalizarTexto(t) {
-  if (!t) return '';
-  return t.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-function normalizarRG(r) {
-  if (!r) return '';
-  const digitos = r.toString().replace(/\D/g, '');
-  return digitos ? digitos.replace(/^0+/, '') : '';
-}
-
-// Modal de correção
-function criarModal() {
-  if (document.getElementById('modal-correcao')) return;
-  const modalHTML = `
-  <div id="modal-correcao" class="modal">
-  <div class="modal-content">
-  <span class="modal-fechar">&times;</span>
-  <h3>🔧 Correção Necessária</h3>
-  <div id="modal-mensagem"></div>
-  </div>
-  </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-  const modal = document.getElementById('modal-correcao');
-  const fecharBtn = modal.querySelector('.modal-fechar');
-  fecharBtn.onclick = () => modal.style.display = 'none';
-  window.onclick = (event) => {
-    if (event.target === modal) modal.style.display = 'none';
-  };
-}
-
-function abrirModalCorrecao(nome, corrigirRG, corrigirRA) {
-  criarModal();
-  const modal = document.getElementById('modal-correcao');
-  const mensagemDiv = document.getElementById('modal-mensagem');
-
-  let texto = `<p><strong>Nome:</strong> ${escapeHTML(nome)}</p>`;
-  texto += '<p><strong>Campos a corrigir na planilha:</strong></p><ul>';
-  if (corrigirRG) texto += '<li>❌ <strong>RG</strong> – verificar e atualizar</li>';
-  if (corrigirRA) texto += '<li>❌ <strong>RA</strong> – verificar e atualizar</li>';
-  if (!corrigirRG && !corrigirRA) texto += '<li>Nenhuma correção específica (apenas observação)</li>';
-  texto += '</ul><p>📌 Por favor, entre em contato com a administração para corrigir seus dados.</p>';
-
-  mensagemDiv.innerHTML = texto;
-  modal.style.display = 'block';
-}
-
-// Busca principal
 async function verificar() {
-  if (!usuarioAutorizado || !tokenIdGlobal) {
-    alert('Faça login primeiro.');
-    return;
-  }
-
-  const termo = document.getElementById('campoBusca').value.trim();
-  const resultadoDiv = document.getElementById('resultado');
-
-  if (!termo) {
-    resultadoDiv.innerHTML = '⚠️ Digite um nome, RG ou RA.';
-    resultadoDiv.className = '';
-    return;
-  }
-
+  if (!tokenJWT) { alert('Faça login primeiro.'); return; }
+  const termo = campoBusca.value.trim();
+  if (!termo) { resultadoDiv.innerHTML = '⚠️ Digite um nome, RG ou RA.'; return; }
   resultadoDiv.innerHTML = '<span class="loading">🔄 Consultando...</span>';
-  resultadoDiv.className = '';
-
   try {
     const resposta = await fetch(API_URL, {
       method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tokenId: tokenIdGlobal, termo: termo })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenJWT}`
+      },
+      body: JSON.stringify({ termo })
     });
-
     const dados = await resposta.json();
-
     if (dados.erro) {
+      if (resposta.status === 401 || resposta.status === 403) {
+        alert('Sessão expirada. Faça login novamente.');
+        logout();
+        return;
+      }
       resultadoDiv.innerHTML = `❌ Erro: ${dados.erro}`;
       resultadoDiv.className = 'nao';
       return;
     }
-
-    if (dados.encontrados && dados.encontrados.length > 0) {
-      let listaHTML = '<div class="sim"><strong>✅ SIM – encontrado(s):</strong>';
-      listaHTML += '<div class="lista"><ul>';
-
-      dados.encontrados.forEach(item => {
-        const nomeExib = escapeHTML(item.nome);
-        let infoAdicional = '';
-
-        if (item.curso && item.setor) {
-          infoAdicional = ` → Curso: ${escapeHTML(item.curso)} | Setor: ${escapeHTML(item.setor)}`;
-        } else if (item.curso) {
-          infoAdicional = ` → ${escapeHTML(item.curso)}`;
-        } else if (item.setor) {
-          infoAdicional = ` → ${escapeHTML(item.setor)}`;
-        }
-
-        const temCorrecao = item.corrigirRG || item.corrigirRA;
-        let botaoCorrecao = '';
-        if (temCorrecao) {
-          botaoCorrecao = `<button class="btn-correcao"
-          data-nome="${escapeHTML(item.nome)}"
-          data-rg="${item.corrigirRG}"
-          data-ra="${item.corrigirRA}">🔍</button>`;
-        }
-
-        listaHTML += `<li><strong>${nomeExib}</strong>${infoAdicional}${botaoCorrecao}</li>`;
-      });
-
-      listaHTML += '</ul></div></div>';
-      resultadoDiv.innerHTML = listaHTML;
-      resultadoDiv.className = '';
-
-      // Ativar eventos dos botões de correção
-      document.querySelectorAll('.btn-correcao').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const nome = btn.getAttribute('data-nome');
-          const corrigirRG = btn.getAttribute('data-rg') === 'true';
-          const corrigirRA = btn.getAttribute('data-ra') === 'true';
-          abrirModalCorrecao(nome, corrigirRG, corrigirRA);
-        });
-      });
-    } else {
-      resultadoDiv.innerHTML = '❌ NÃO – nenhuma assinatura encontrada.';
-      resultadoDiv.className = 'nao';
-    }
+    exibirResultados(dados.encontrados);
   } catch (err) {
-    console.error('Erro na consulta:', err);
     resultadoDiv.innerHTML = `❌ Erro na conexão: ${err.message}`;
-    resultadoDiv.className = 'nao';
   }
 }
 
-function escapeHTML(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
+async function listarTodasCorrecoes() {
+  if (!tokenJWT) { alert('Faça login primeiro.'); return; }
+  resultadoDiv.innerHTML = '<span class="loading">🔄 Carregando correções...</span>';
+  try {
+    const resposta = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenJWT}`
+      },
+      body: JSON.stringify({ termo: '___TODOS_CORRECOES___' })
+    });
+    const dados = await resposta.json();
+    if (dados.erro) throw new Error(dados.erro);
+    exibirResultados(dados.encontrados, true);
+  } catch (err) {
+    resultadoDiv.innerHTML = `❌ Erro: ${err.message}`;
+  }
+}
+
+function exibirResultados(encontrados, isListaCorrecoes = false) {
+  if (!encontrados || encontrados.length === 0) {
+    resultadoDiv.innerHTML = isListaCorrecoes ? '✅ Nenhuma correção pendente.' : '❌ Nenhuma assinatura encontrada.';
+    resultadoDiv.className = isListaCorrecoes ? 'sim' : 'nao';
+    return;
+  }
+  let titulo = isListaCorrecoes ? '<strong>🔧 Pessoas com correção pendente:</strong>' : '<strong>✅ SIM – encontrado(s):</strong>';
+  let html = `<div class="sim">${titulo}<div class="lista"><ul>`;
+  encontrados.forEach(item => {
+    const nome = escapeHTML(item.nome);
+    let info = '';
+    if (item.curso && item.setor) info = ` → Curso: ${escapeHTML(item.curso)} | Setor: ${escapeHTML(item.setor)}`;
+    else if (item.curso) info = ` → ${escapeHTML(item.curso)}`;
+    else if (item.setor) info = ` → ${escapeHTML(item.setor)}`;
+    const temCorrecao = item.corrigirRG || item.corrigirRA || item.corrigirCurso;
+    let botao = '';
+    if (temCorrecao) {
+      botao = `<button class="btn-correcao"
+      data-nome="${escapeHTML(item.nome)}"
+      data-rg="${item.corrigirRG}"
+      data-ra="${item.corrigirRA}"
+      data-curso="${item.corrigirCurso}">🔍</button>`;
+    }
+    html += `<li><strong>${nome}</strong>${info} ${botao}</li>`;
+  });
+  html += '</ul></div></div>';
+  resultadoDiv.innerHTML = html;
+  document.querySelectorAll('.btn-correcao').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const nome = btn.dataset.nome;
+      const rg = btn.dataset.rg === 'true';
+      const ra = btn.dataset.ra === 'true';
+      const curso = btn.dataset.curso === 'true';
+      abrirModalCorrecao(nome, rg, ra, curso);
+    });
   });
 }
 
-// Listener para tecla Enter
-document.getElementById('campoBusca').addEventListener('keypress', function(event) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    verificar();
-  }
-});
+function criarModal() { /* igual ao anterior – omitido por brevidade, mas mantenha do código original */ }
+function abrirModalCorrecao(nome, corrigirRG, corrigirRA, corrigirCurso) { /* igual */ }
+function escapeHTML(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
+
+campoBusca.addEventListener('keypress', e => { if (e.key === 'Enter') verificar(); });
