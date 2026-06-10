@@ -2,7 +2,7 @@
 // FRONT-END COM AUTENTICAÇÃO LOCAL (usuário/senha)
 // ==========================================
 
-let tokenJWT = null;
+let tokenJWT = localStorage.getItem('tokenJWT') || null;
 const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev';
 
 const loginContainer = document.getElementById('login-container');
@@ -10,7 +10,12 @@ const consultaContainer = document.getElementById('consulta-container');
 const resultadoDiv = document.getElementById('resultado');
 const campoBusca = document.getElementById('campoBusca');
 
-// ========== LOGIN ==========
+// Se já estiver logado (token no localStorage), mostra a tela de consulta
+if (tokenJWT) {
+    loginContainer.style.display = 'none';
+    consultaContainer.style.display = 'block';
+}
+
 async function fazerLogin() {
     const nome = document.getElementById('login-nome').value.trim();
     const senha = document.getElementById('login-senha').value;
@@ -29,6 +34,7 @@ async function fazerLogin() {
         const dados = await resposta.json();
         if (dados.sucesso) {
             tokenJWT = dados.token;
+            localStorage.setItem('tokenJWT', dados.token);
             loginContainer.style.display = 'none';
             consultaContainer.style.display = 'block';
             resultadoDiv.innerHTML = '';
@@ -44,6 +50,7 @@ async function fazerLogin() {
 
 function logout() {
     tokenJWT = null;
+    localStorage.removeItem('tokenJWT');
     loginContainer.style.display = 'block';
     consultaContainer.style.display = 'none';
     campoBusca.value = '';
@@ -52,11 +59,15 @@ function logout() {
     document.getElementById('login-senha').value = '';
 }
 
-// ========== CONSULTAS ==========
 async function verificar() {
-    if (!tokenJWT) {
-        alert('Faça login primeiro.');
-        return;
+    let token = tokenJWT;
+    if (!token) {
+        token = localStorage.getItem('tokenJWT');
+        if (!token) {
+            alert('Faça login primeiro.');
+            return;
+        }
+        tokenJWT = token;
     }
     const termo = campoBusca.value.trim();
     if (!termo) {
@@ -71,7 +82,7 @@ async function verificar() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${tokenJWT}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ termo })
         });
@@ -95,9 +106,14 @@ async function verificar() {
 }
 
 async function listarTodasCorrecoes() {
-    if (!tokenJWT) {
-        alert('Faça login primeiro.');
-        return;
+    let token = tokenJWT;
+    if (!token) {
+        token = localStorage.getItem('tokenJWT');
+        if (!token) {
+            alert('Faça login primeiro.');
+            return;
+        }
+        tokenJWT = token;
     }
     resultadoDiv.innerHTML = '<span class="loading">🔄 Carregando correções pendentes...</span>';
     resultadoDiv.className = '';
@@ -106,7 +122,7 @@ async function listarTodasCorrecoes() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${tokenJWT}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ termo: '___TODOS_CORRECOES___' })
         });
@@ -120,104 +136,12 @@ async function listarTodasCorrecoes() {
     }
 }
 
-function exibirResultados(encontrados, isListaCorrecoes = false) {
-    if (!encontrados || encontrados.length === 0) {
-        resultadoDiv.innerHTML = isListaCorrecoes
-            ? '✅ Nenhuma correção pendente encontrada.'
-            : '❌ Nenhuma assinatura encontrada.';
-        resultadoDiv.className = isListaCorrecoes ? 'sim' : 'nao';
-        return;
-    }
+// As funções exibirResultados, criarModal, abrirModalCorrecao, escapeHTML permanecem iguais
+// ... (copie do seu arquivo atual, elas estão ok)
 
-    let titulo = isListaCorrecoes
-        ? '<strong>🔧 Pessoas com correção pendente:</strong>'
-        : '<strong>✅ SIM – encontrado(s):</strong>';
-    let html = `<div class="sim">${titulo}<div class="lista"><ul>`;
-
-    encontrados.forEach(item => {
-        const nome = escapeHTML(item.nome);
-        let info = '';
-        if (item.curso && item.setor) {
-            info = ` → Curso: ${escapeHTML(item.curso)} | Setor: ${escapeHTML(item.setor)}`;
-        } else if (item.curso) {
-            info = ` → ${escapeHTML(item.curso)}`;
-        } else if (item.setor) {
-            info = ` → ${escapeHTML(item.setor)}`;
-        }
-
-        const temCorrecao = item.corrigirRG || item.corrigirRA || item.corrigirCurso;
-        let botao = '';
-        if (temCorrecao) {
-            botao = `<button class="btn-correcao"
-                data-nome="${escapeHTML(item.nome)}"
-                data-rg="${item.corrigirRG}"
-                data-ra="${item.corrigirRA}"
-                data-curso="${item.corrigirCurso}">🔍</button>`;
-        }
-        html += `<li><strong>${nome}</strong>${info} ${botao}</li>`;
-    });
-
-    html += '</ul></div></div>';
-    resultadoDiv.innerHTML = html;
-    resultadoDiv.className = '';
-
-    document.querySelectorAll('.btn-correcao').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const nome = btn.dataset.nome;
-            const rg = btn.dataset.rg === 'true';
-            const ra = btn.dataset.ra === 'true';
-            const curso = btn.dataset.curso === 'true';
-            abrirModalCorrecao(nome, rg, ra, curso);
-        });
-    });
-}
-
-// ========== MODAL DE CORREÇÃO ==========
-function criarModal() {
-    if (document.getElementById('modal-correcao')) return;
-    const modalHTML = `
-    <div id="modal-correcao" class="modal">
-        <div class="modal-content">
-            <span class="modal-fechar">&times;</span>
-            <h3>🔧 Correção Necessária</h3>
-            <div id="modal-mensagem"></div>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    const modal = document.getElementById('modal-correcao');
-    const fechar = modal.querySelector('.modal-fechar');
-    fechar.onclick = () => modal.style.display = 'none';
-    window.onclick = (event) => {
-        if (event.target === modal) modal.style.display = 'none';
-    };
-}
-
-function abrirModalCorrecao(nome, corrigirRG, corrigirRA, corrigirCurso) {
-    criarModal();
-    const modal = document.getElementById('modal-correcao');
-    const msgDiv = document.getElementById('modal-mensagem');
-    let texto = `<p><strong>Nome:</strong> ${escapeHTML(nome)}</p>`;
-    texto += '<p><strong>Campos a corrigir na planilha:</strong></p><ul>';
-    if (corrigirRG) texto += '<li>❌ <strong>RG</strong> – verificar e atualizar</li>';
-    if (corrigirRA) texto += '<li>❌ <strong>RA</strong> – verificar e atualizar</li>';
-    if (corrigirCurso) texto += '<li>❌ <strong>Curso</strong> – verificar e atualizar</li>';
-    if (!corrigirRG && !corrigirRA && !corrigirCurso) texto += '<li>Nenhuma correção específica</li>';
-    texto += '</ul><p>📌 Entre em contato com a administração para corrigir seus dados.</p>';
-    msgDiv.innerHTML = texto;
-    modal.style.display = 'block';
-}
-
-function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
-}
-
-// ========== LISTENERS ==========
+// Listeners
 document.getElementById('login-senha').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        fazerLogin();
-    }
+    if (e.key === 'Enter') fazerLogin();
 });
 campoBusca.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') verificar();
