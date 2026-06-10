@@ -1,6 +1,7 @@
 // ==========================================
 // FRONT-END COM AUTENTICAÇÃO LOCAL (usuário/senha)
 // ==========================================
+console.log("Script carregado");
 
 let tokenJWT = localStorage.getItem('tokenJWT') || null;
 const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ATUALIZE SE O NGROK MUDAR
@@ -15,8 +16,9 @@ if (tokenJWT) {
     consultaContainer.style.display = 'block';
 }
 
-// ========== FUNÇÕES ==========
+// ========== LOGIN ==========
 async function fazerLogin() {
+    console.log("fazerLogin() chamado");
     const nome = document.getElementById('login-nome').value.trim();
     const senha = document.getElementById('login-senha').value;
     if (!nome || !senha) {
@@ -32,6 +34,7 @@ async function fazerLogin() {
             body: JSON.stringify({ nome, senha })
         });
         const dados = await resposta.json();
+        console.log("Resposta login:", dados);
         if (dados.sucesso) {
             tokenJWT = dados.token;
             localStorage.setItem('tokenJWT', dados.token);
@@ -43,12 +46,14 @@ async function fazerLogin() {
             resultadoDiv.className = 'nao';
         }
     } catch (err) {
+        console.error(err);
         resultadoDiv.innerHTML = `❌ Erro na conexão: ${err.message}`;
         resultadoDiv.className = 'nao';
     }
 }
 
 function logout() {
+    console.log("logout() chamado");
     tokenJWT = null;
     localStorage.removeItem('tokenJWT');
     loginContainer.style.display = 'block';
@@ -59,8 +64,9 @@ function logout() {
     document.getElementById('login-senha').value = '';
 }
 
+// ========== CONSULTAS ==========
 async function verificar() {
-    console.log('verificar() chamada');
+    console.log("verificar() chamado");
     let token = tokenJWT;
     if (!token) {
         token = localStorage.getItem('tokenJWT');
@@ -71,6 +77,7 @@ async function verificar() {
         tokenJWT = token;
     }
     const termo = campoBusca.value.trim();
+    console.log("Termo digitado:", termo);
     if (!termo) {
         resultadoDiv.innerHTML = '⚠️ Digite um nome, RG ou RA.';
         resultadoDiv.className = '';
@@ -88,6 +95,7 @@ async function verificar() {
             body: JSON.stringify({ termo })
         });
         const dados = await resposta.json();
+        console.log("Resposta busca:", dados);
         if (dados.erro) {
             if (resposta.status === 401 || resposta.status === 403) {
                 alert('Sessão expirada. Faça login novamente.');
@@ -107,6 +115,7 @@ async function verificar() {
 }
 
 async function listarTodasCorrecoes() {
+    console.log("listarTodasCorrecoes() chamado");
     let token = tokenJWT;
     if (!token) {
         token = localStorage.getItem('tokenJWT');
@@ -138,17 +147,18 @@ async function listarTodasCorrecoes() {
 }
 
 function exibirResultados(encontrados, isListaCorrecoes = false) {
+    console.log("exibirResultados chamado, quantidade:", encontrados.length);
     if (!encontrados || encontrados.length === 0) {
         resultadoDiv.innerHTML = isListaCorrecoes
-            ? '✅ Nenhuma correção pendente encontrada.'
-            : '❌ Nenhuma assinatura encontrada.';
+        ? '✅ Nenhuma correção pendente encontrada.'
+        : '❌ Nenhuma assinatura encontrada.';
         resultadoDiv.className = isListaCorrecoes ? 'sim' : 'nao';
         return;
     }
 
     let titulo = isListaCorrecoes
-        ? '<strong>🔧 Pessoas com correção pendente:</strong>'
-        : '<strong>✅ SIM – encontrado(s):</strong>';
+    ? '<strong>🔧 Pessoas com correção pendente:</strong>'
+    : '<strong>✅ SIM – encontrado(s):</strong>';
     let html = `<div class="sim">${titulo}<div class="lista"><ul>`;
 
     encontrados.forEach(item => {
@@ -166,10 +176,10 @@ function exibirResultados(encontrados, isListaCorrecoes = false) {
         let botao = '';
         if (temCorrecao) {
             botao = `<button class="btn-correcao"
-                data-nome="${escapeHTML(item.nome)}"
-                data-rg="${item.corrigirRG}"
-                data-ra="${item.corrigirRA}"
-                data-curso="${item.corrigirCurso}">🔍</button>`;
+            data-nome="${escapeHTML(item.nome)}"
+            data-rg="${item.corrigirRG}"
+            data-ra="${item.corrigirRA}"
+            data-curso="${item.corrigirCurso}">🔍</button>`;
         }
         html += `<li><strong>${nome}</strong>${info} ${botao}</li>`;
     });
@@ -179,11 +189,11 @@ function exibirResultados(encontrados, isListaCorrecoes = false) {
     resultadoDiv.className = '';
 
     document.querySelectorAll('.btn-correcao').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const nome = this.dataset.nome;
-            const rg = this.dataset.rg === 'true';
-            const ra = this.dataset.ra === 'true';
-            const curso = this.dataset.curso === 'true';
+        btn.addEventListener('click', () => {
+            const nome = btn.dataset.nome;
+            const rg = btn.dataset.rg === 'true';
+            const ra = btn.dataset.ra === 'true';
+            const curso = btn.dataset.curso === 'true';
             abrirModalCorrecao(nome, rg, ra, curso);
         });
     });
@@ -194,11 +204,11 @@ function criarModal() {
     if (document.getElementById('modal-correcao')) return;
     const modalHTML = `
     <div id="modal-correcao" class="modal">
-        <div class="modal-content">
-            <span class="modal-fechar">&times;</span>
-            <h3>🔧 Correção Necessária</h3>
-            <div id="modal-mensagem"></div>
-        </div>
+    <div class="modal-content">
+    <span class="modal-fechar">&times;</span>
+    <h3>🔧 Correção Necessária</h3>
+    <div id="modal-mensagem"></div>
+    </div>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     const modal = document.getElementById('modal-correcao');
@@ -229,12 +239,12 @@ function escapeHTML(str) {
     return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
 }
 
-// ========== EVENTOS (após DOM carregado) ==========
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('btn-login').addEventListener('click', fazerLogin);
-    document.getElementById('btn-consultar').addEventListener('click', verificar);
-    document.getElementById('btn-correcoes').addEventListener('click', listarTodasCorrecoes);
-    document.getElementById('btn-logout').addEventListener('click', logout);
-    document.getElementById('login-senha').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
-    campoBusca.addEventListener('keypress', e => { if (e.key === 'Enter') verificar(); });
+// Listeners adicionais (tecla Enter)
+document.getElementById('login-senha').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') fazerLogin();
 });
+campoBusca.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') verificar();
+});
+
+console.log("Script finalizado, funções definidas: verificar, fazerLogin, logout, listarTodasCorrecoes");
