@@ -77,9 +77,9 @@
         <h2>Verificar assinatura</h2>
         <p>Digite o <strong>primeiro nome, RG (apenas números) ou RA</strong>.</p>
         <input type="text" id="campoBusca" placeholder="Ex: João, 123456789 ou 2024001" size="40">
-        <button onclick="verificar()">Consultar</button>
-        <button onclick="listarTodasCorrecoes()" style="background-color: #ff9800; color: white;">🔧 Ver todas correções pendentes</button>
-        <button onclick="logout()" class="logout-btn">Sair</button>
+        <button id="btn-consultar">Consultar</button>
+        <button id="btn-correcoes" style="background-color: #ff9800; color: white;">🔧 Ver todas correções pendentes</button>
+        <button id="btn-logout" class="logout-btn">Sair</button>
         <div id="resultado"></div>
         <div class="dica">
             ✔️ Busca por primeiro nome, nome completo, RG ou RA (inclui partes numéricas).<br>

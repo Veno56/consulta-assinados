@@ -3,14 +3,14 @@
 // ==========================================
 
 let tokenJWT = localStorage.getItem('tokenJWT') || null;
-const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev';
+const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ← atualize se o ngrok mudar
 
 const loginContainer = document.getElementById('login-container');
 const consultaContainer = document.getElementById('consulta-container');
 const resultadoDiv = document.getElementById('resultado');
 const campoBusca = document.getElementById('campoBusca');
 
-// Se já estiver logado (token no localStorage), mostra a tela de consulta
+// Se já estiver logado, mostra tela de consulta
 if (tokenJWT) {
     loginContainer.style.display = 'none';
     consultaContainer.style.display = 'block';
@@ -231,25 +231,21 @@ function escapeHTML(str) {
 }
 
 // ========== LISTENERS ==========
-// Enter no campo de senha (tela de login)
-const senhaInput = document.getElementById('login-senha');
-if (senhaInput) {
-    senhaInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') fazerLogin();
-    });
-}
-
-// Enter no campo de busca (tela de consulta)
-campoBusca.addEventListener('keypress', (e) => {
+document.getElementById('login-senha').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') fazerLogin();
+});
+document.getElementById('campoBusca').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') verificar();
 });
-
-// CORREÇÃO DO CLIQUE NO BOTÃO "CONSULTAR" (remove dependência do onclick do HTML)
-const btnConsultar = document.querySelector('button[onclick="verificar()"]');
-if (btnConsultar) {
-    btnConsultar.removeAttribute('onclick');
-    btnConsultar.addEventListener('click', (e) => {
-        e.preventDefault();
-        verificar();
-    });
-}
+document.getElementById('btn-consultar').addEventListener('click', (e) => {
+    e.preventDefault();
+    verificar();
+});
+document.getElementById('btn-correcoes').addEventListener('click', (e) => {
+    e.preventDefault();
+    listarTodasCorrecoes();
+});
+document.getElementById('btn-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    logout();
+});
