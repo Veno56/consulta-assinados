@@ -3,20 +3,19 @@
 // ==========================================
 
 let tokenJWT = localStorage.getItem('tokenJWT') || null;
-const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ← atualize se o ngrok mudar
+const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ATUALIZE SE O NGROK MUDAR
 
 const loginContainer = document.getElementById('login-container');
 const consultaContainer = document.getElementById('consulta-container');
 const resultadoDiv = document.getElementById('resultado');
 const campoBusca = document.getElementById('campoBusca');
 
-// Se já estiver logado, mostra tela de consulta
 if (tokenJWT) {
     loginContainer.style.display = 'none';
     consultaContainer.style.display = 'block';
 }
 
-// ========== LOGIN ==========
+// ========== FUNÇÕES ==========
 async function fazerLogin() {
     const nome = document.getElementById('login-nome').value.trim();
     const senha = document.getElementById('login-senha').value;
@@ -60,8 +59,8 @@ function logout() {
     document.getElementById('login-senha').value = '';
 }
 
-// ========== CONSULTAS ==========
 async function verificar() {
+    console.log('verificar() chamada');
     let token = tokenJWT;
     if (!token) {
         token = localStorage.getItem('tokenJWT');
@@ -180,17 +179,17 @@ function exibirResultados(encontrados, isListaCorrecoes = false) {
     resultadoDiv.className = '';
 
     document.querySelectorAll('.btn-correcao').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const nome = btn.dataset.nome;
-            const rg = btn.dataset.rg === 'true';
-            const ra = btn.dataset.ra === 'true';
-            const curso = btn.dataset.curso === 'true';
+        btn.addEventListener('click', function(e) {
+            const nome = this.dataset.nome;
+            const rg = this.dataset.rg === 'true';
+            const ra = this.dataset.ra === 'true';
+            const curso = this.dataset.curso === 'true';
             abrirModalCorrecao(nome, rg, ra, curso);
         });
     });
 }
 
-// ========== MODAL DE CORREÇÃO ==========
+// ========== MODAL ==========
 function criarModal() {
     if (document.getElementById('modal-correcao')) return;
     const modalHTML = `
@@ -230,22 +229,12 @@ function escapeHTML(str) {
     return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
 }
 
-// ========== LISTENERS ==========
-document.getElementById('login-senha').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') fazerLogin();
-});
-document.getElementById('campoBusca').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') verificar();
-});
-document.getElementById('btn-consultar').addEventListener('click', (e) => {
-    e.preventDefault();
-    verificar();
-});
-document.getElementById('btn-correcoes').addEventListener('click', (e) => {
-    e.preventDefault();
-    listarTodasCorrecoes();
-});
-document.getElementById('btn-logout').addEventListener('click', (e) => {
-    e.preventDefault();
-    logout();
+// ========== EVENTOS (após DOM carregado) ==========
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btn-login').addEventListener('click', fazerLogin);
+    document.getElementById('btn-consultar').addEventListener('click', verificar);
+    document.getElementById('btn-correcoes').addEventListener('click', listarTodasCorrecoes);
+    document.getElementById('btn-logout').addEventListener('click', logout);
+    document.getElementById('login-senha').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
+    campoBusca.addEventListener('keypress', e => { if (e.key === 'Enter') verificar(); });
 });
