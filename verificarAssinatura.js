@@ -4,7 +4,7 @@
 console.log("Script carregado");
 
 let tokenJWT = localStorage.getItem('tokenJWT') || null;
-const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ATUALIZE SE O NGROK MUDAR
+const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev/api/verificar'; // ATUALIZE SE O NGROK MUDAR
 
 const loginContainer = document.getElementById('login-container');
 const consultaContainer = document.getElementById('consulta-container');
