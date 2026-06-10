@@ -70,7 +70,7 @@
             <input type="password" id="login-senha" placeholder="Senha"><br>
             <button onclick="fazerLogin()">Entrar</button>
         </div>
-        <div id="resultado"></div>
+        <div id="login-message"></div>   <!-- mensagens do login (opcional) -->
     </div>
 
     <div id="consulta-container" style="display:none;">
@@ -80,7 +80,7 @@
         <button onclick="verificar()">Consultar</button>
         <button onclick="listarTodasCorrecoes()" style="background-color: #ff9800; color: white;">🔧 Ver todas correções pendentes</button>
         <button onclick="logout()" class="logout-btn">Sair</button>
-        <div id="resultado"></div>
+        <div id="resultado"></div>   <!-- único elemento com id resultado -->
         <div class="dica">
             ✔️ Busca por primeiro nome, nome completo, RG ou RA (inclui partes numéricas).<br>
             ✔️ Se houver ícone 🔍, clique para ver correções necessárias (RG, RA ou Curso).<br>

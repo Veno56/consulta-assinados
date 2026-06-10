@@ -4,7 +4,7 @@
 console.log("Script carregado");
 
 let tokenJWT = localStorage.getItem('tokenJWT') || null;
-const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev/api/verificar'; // ATUALIZE SE O NGROK MUDAR
+const BASE_URL = 'https://reformer-unreal-escalate.ngrok-free.dev'; // ATUALIZE SE O NGROK MUDAR
 
 const loginContainer = document.getElementById('login-container');
 const consultaContainer = document.getElementById('consulta-container');
@@ -239,7 +239,7 @@ function escapeHTML(str) {
     return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
 }
 
-// Listeners adicionais (tecla Enter)
+// Listeners para tecla Enter
 document.getElementById('login-senha').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') fazerLogin();
 });
